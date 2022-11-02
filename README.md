@@ -4,3 +4,6 @@
 start.sh подгрузка либы штрих и запуск python+скрипта  
 Start.py сам сервер на основе Flask  
 Сам платеж передается виде JSON  
+
+Обновленные исходники брать от суда 
+https://github.com/shtrih-m/fr_drv_ng 
