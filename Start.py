@@ -13,31 +13,49 @@ def checkResult(err):
 def sale():
     content_type = request.headers.get('Content-Type')
     if (content_type == 'application/json'):
-        try:
-            return chek(request.json)
-        except Exception as e:
-            return e.message
-
-def chek(json):
-    ci.ConnectionURI="tcp://172.16.0.222:7778?timeout=10000&protocol=v1&enq_mode=1"
-    try:
-        status = checkResult(ci.Connect())
-        if status == None:
+            json = request.get_json()
+            ci.ConnectionURI="tcp://172.0.0.222:7778?timeout=10000&protocol=v1&enq_mode=1"
+            status = ''
+            status = checkResult(ci.Connect())
             if ci.ECRMode==4:
                 status = checkResult(ci.OpenSession())
                 if status != None:
-                    return status
+                    return 'OpenSession: '+status
             if ci.ECRMode==3:
                 oldPassword = ci.Password
                 ci.Password=ci.SysAdminPassword
                 status = checkResult(ci.PrintReportWithCleaning())
                 if status != None:
-                    return status
+                    return 'PrintReportWithCleaning: '+status
                 ci.Password=oldPassword
-        else:
-            status    
-    except Exception as e:
-            return e.message
+            ci.CheckType = 0 #json["CheckType"]
+            status = checkResult(ci.OpenCheck())
+            if status != None:
+                return 'OpenCheck: '+status
+            ci.CustomerEmail = json["CustomerEmail"]
+            status = checkResult(ci.FNSendCustomerEmail())
+            if status != None:
+                return 'FNSendCustomerEmail: '+status
+            ci.StringForPrinting = '"'+json["StringForPrinting"]+'"'
+            ci.Price = json["Price"]
+            ci.Quantity = json["QUANTITY"]
+            ci.Summa2 = json["SaleSumma"]
+            ci.Tax1 = 1
+            ci.CheckType = json["CheckType"]
+            ci.Summa2 = json["SaleSumma"]
+            ci.PaymentTypeSign = json["PaymentTypeSign"]
+            ci.PaymentItemSign = json["PaymentItemSign"]
+            status = checkResult(ci.FNOperation())
+            if status != None:
+                return 'FNOperation: '+status
+            status = checkResult(ci.CheckSubTotal())
+            if status != None:
+                return 'CheckSubTotal: '+status
+            ci.Summa2 = json["SaleSumma"]
+            status = checkResult(ci.FNCloseCheckEx())
+            if status != None:
+                return 'FNCloseCheckEx: '+status
+            return 'GOD'               
 
 @app.route('/status', methods = ['GET'])
 def status():
